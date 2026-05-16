@@ -37,7 +37,7 @@
 - [ ] Add `AuthController` MockMvc coverage for `POST /api/auth/callback/apple` returning `AuthResponse`.
 - [ ] Add validation coverage for blank or missing `authorizationCode`.
 - [ ] Verify controller tests assert that Apple login delegates to the auth service with Apple provider semantics.
-- [ ] Run `.\gradlew.bat test --tests "*AuthControllerTest"` from `apps/backend`.
+- [ ] Run `./gradlew test --tests "*AuthControllerTest"` from `apps/backend` (Windows: `.\gradlew.bat test --tests "*AuthControllerTest"`).
 
 ## Task 2: Provider And Configuration Model
 
@@ -45,7 +45,7 @@
 - [ ] Extend auth OAuth configuration with Apple-specific fields: client id, team id, key id, private key source, token URI, JWKS URI, and redirect URI when required.
 - [ ] Add safe placeholder values to backend example configuration files.
 - [ ] Confirm no real Apple private key material is committed.
-- [ ] Run `.\gradlew.bat test --tests "*AuthServiceTest"` from `apps/backend` to catch compile failures before service integration.
+- [ ] Run `./gradlew test --tests "*AuthServiceTest"` from `apps/backend` to catch compile failures before service integration (Windows: `.\gradlew.bat test --tests "*AuthServiceTest"`).
 
 ## Task 3: Apple Client Secret Generator
 
@@ -88,7 +88,7 @@
 
 ## Task 8: Verification
 
-- [ ] Run `.\gradlew.bat test --tests "*AuthControllerTest" --tests "*AuthServiceTest" --tests "*Apple*Test"` from `apps/backend`.
+- [ ] Run `./gradlew test --tests "*AuthControllerTest" --tests "*AuthServiceTest" --tests "*Apple*Test"` from `apps/backend` (Windows: `.\gradlew.bat test --tests "*AuthControllerTest" --tests "*AuthServiceTest" --tests "*Apple*Test"`).
 - [ ] Run existing Google OAuth tests.
 - [ ] Run full backend test suite when local environment allows it.
 - [ ] Inspect `git diff` for unrelated changes before completion.
