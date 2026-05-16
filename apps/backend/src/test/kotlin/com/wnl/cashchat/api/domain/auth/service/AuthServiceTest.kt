@@ -1,6 +1,7 @@
 package com.wnl.cashchat.api.domain.auth.service
 
 import com.wnl.cashchat.api.common.security.jwt.JwtTokenHandler
+import com.wnl.cashchat.api.domain.auth.exception.OAuthException
 import com.wnl.cashchat.api.domain.auth.oauth.apple.AppleIdTokenClaims
 import com.wnl.cashchat.api.domain.auth.oauth.apple.AppleIdTokenValidator
 import com.wnl.cashchat.api.domain.auth.oauth.apple.AppleTokenClient
@@ -14,10 +15,13 @@ import com.wnl.cashchat.api.domain.point.service.UserPointService
 import com.wnl.cashchat.api.domain.user.persistence.entity.Role
 import com.wnl.cashchat.api.domain.user.persistence.entity.User
 import com.wnl.cashchat.api.domain.user.persistence.repository.UserRepository
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import org.mockito.kotlin.any
 import org.mockito.kotlin.argThat
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.web.client.RestClient
@@ -253,5 +257,41 @@ class AuthServiceTest : FunSpec({
         response.userId shouldBe 2L
         response.role shouldBe Role.MEMBER
         verify(userPointService).ensureInitialized(existingUser)
+    }
+
+    test("loginWithApple rejects missing Apple id token before creating or upgrading user") {
+        val userRepository = mock<UserRepository>()
+        val refreshTokenRepository = mock<RefreshTokenRepository>()
+        val jwtTokenHandler = mock<JwtTokenHandler>()
+        val userPointService = mock<UserPointService>()
+        val appleTokenClient = mock<AppleTokenClient>()
+        val appleIdTokenValidator = mock<AppleIdTokenValidator>()
+        val appleUserInfoExtractor = mock<AppleUserInfoExtractor>()
+        val authService = AuthService(
+            userRepository = userRepository,
+            refreshTokenRepository = refreshTokenRepository,
+            jwtTokenHandler = jwtTokenHandler,
+            oAuthProperties = OAuthProperties(),
+            restClient = mock<RestClient>(),
+            userPointService = userPointService,
+            appleTokenClient = appleTokenClient,
+            appleIdTokenValidator = appleIdTokenValidator,
+            appleUserInfoExtractor = appleUserInfoExtractor,
+            oAuthUserInfoExtractors = emptyList(),
+        )
+        whenever(appleTokenClient.exchangeAuthorizationCode("authorization-code"))
+            .thenReturn(AppleTokenResponse(idToken = null))
+
+        shouldThrow<OAuthException> {
+            authService.loginWithApple(
+                authorizationCode = "authorization-code",
+                identityToken = null,
+                fullName = null,
+                deviceToken = null,
+            )
+        }.message shouldBe "Missing id_token in Apple response"
+
+        verify(userRepository, never()).save(any())
+        verify(userPointService, never()).ensureInitialized(any())
     }
 })

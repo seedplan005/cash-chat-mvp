@@ -101,7 +101,9 @@ class AuthService(
         deviceToken: String?
     ): AuthResponse {
         val tokenResponse = appleTokenClient.exchangeAuthorizationCode(authorizationCode)
-        val claims = appleIdTokenValidator.validate(tokenResponse.idToken!!)
+        val idToken = tokenResponse.idToken?.takeIf { it.isNotBlank() }
+            ?: throw OAuthException("Missing id_token in Apple response")
+        val claims = appleIdTokenValidator.validate(idToken)
         val userInfo = appleUserInfoExtractor.extract(claims, fullName)
         val user = lookupOrRegisterUser(userInfo, AuthProviderType.APPLE, deviceToken)
 
