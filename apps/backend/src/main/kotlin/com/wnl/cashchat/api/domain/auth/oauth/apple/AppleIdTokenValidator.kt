@@ -11,6 +11,8 @@ import org.springframework.web.client.RestClient
 import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestClientResponseException
 import java.time.Clock
+import java.time.Duration
+import java.time.Instant
 import java.util.Date
 
 @Component
@@ -22,7 +24,11 @@ class AppleIdTokenValidator(
 
     companion object {
         private const val APPLE_ISSUER = "https://appleid.apple.com"
+        private val JWK_SET_CACHE_TTL: Duration = Duration.ofMinutes(5)
     }
+
+    @Volatile
+    private var cachedJwkSet: CachedJwkSet? = null
 
     fun validate(idToken: String): AppleIdTokenClaims {
         val signedJwt = parse(idToken)
@@ -78,6 +84,20 @@ class AppleIdTokenValidator(
     }
 
     private fun fetchJwkSet(): JWKSet {
+        val now = clock.instant()
+        cachedJwkSet?.takeIf { it.expiresAt.isAfter(now) }?.let { return it.jwkSet }
+
+        return synchronized(this) {
+            val refreshedNow = clock.instant()
+            cachedJwkSet?.takeIf { it.expiresAt.isAfter(refreshedNow) }?.let { return@synchronized it.jwkSet }
+
+            val jwkSet = fetchRemoteJwkSet()
+            cachedJwkSet = CachedJwkSet(jwkSet, refreshedNow.plus(JWK_SET_CACHE_TTL))
+            jwkSet
+        }
+    }
+
+    private fun fetchRemoteJwkSet(): JWKSet {
         val jwksUri = oAuthProperties.apple.jwksUri
 
         return try {
@@ -98,6 +118,11 @@ class AppleIdTokenValidator(
             throw OAuthException("Malformed Apple JWKS response", e)
         }
     }
+
+    private data class CachedJwkSet(
+        val jwkSet: JWKSet,
+        val expiresAt: Instant,
+    )
 }
 
 data class AppleIdTokenClaims(

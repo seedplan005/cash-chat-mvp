@@ -45,6 +45,19 @@ class AppleIdTokenValidatorTest : FunSpec({
         fixture.server.verify()
     }
 
+    test("validate reuses cached Apple JWKS") {
+        val key = rsaKey("kid-1")
+        val fixture = validatorFixture(key, fixedClock)
+        val token = appleToken(key)
+
+        fixture.expectJwks()
+
+        fixture.validator.validate(token)
+        fixture.validator.validate(token)
+
+        fixture.server.verify()
+    }
+
     test("validate rejects wrong audience") {
         val key = rsaKey("kid-1")
         val fixture = validatorFixture(key, fixedClock)
