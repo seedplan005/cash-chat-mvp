@@ -66,6 +66,7 @@ class AppleTokenClientTest : FunSpec({
         shouldThrow<OAuthException> {
             fixture.client.exchangeAuthorizationCode("bad-code")
         }.message shouldBe "Apple token exchange failed: 400 BAD_REQUEST"
+        fixture.server.verify()
     }
 
     test("exchangeAuthorizationCode converts network failure to OAuthException") {
@@ -76,6 +77,7 @@ class AppleTokenClientTest : FunSpec({
         shouldThrow<OAuthException> {
             fixture.client.exchangeAuthorizationCode("authorization-code")
         }.message shouldBe "Apple token exchange failed: network error"
+        fixture.server.verify()
     }
 
     test("exchangeAuthorizationCode requires id token") {
@@ -86,6 +88,7 @@ class AppleTokenClientTest : FunSpec({
         shouldThrow<OAuthException> {
             fixture.client.exchangeAuthorizationCode("authorization-code")
         }.message shouldBe "Apple token response does not contain 'id_token'"
+        fixture.server.verify()
     }
 })
 

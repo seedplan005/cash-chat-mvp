@@ -54,6 +54,7 @@ class AppleIdTokenValidatorTest : FunSpec({
         shouldThrow<OAuthException> {
             fixture.validator.validate(token)
         }.message shouldBe "Invalid Apple id token audience"
+        fixture.server.verify()
     }
 
     test("validate rejects expired token") {
@@ -65,6 +66,7 @@ class AppleIdTokenValidatorTest : FunSpec({
         shouldThrow<OAuthException> {
             fixture.validator.validate(token)
         }.message shouldBe "Expired Apple id token"
+        fixture.server.verify()
     }
 
     test("validate rejects missing subject") {
@@ -76,6 +78,7 @@ class AppleIdTokenValidatorTest : FunSpec({
         shouldThrow<OAuthException> {
             fixture.validator.validate(token)
         }.message shouldBe "Apple id token does not contain subject"
+        fixture.server.verify()
     }
 
     test("validate rejects unknown key id") {
@@ -88,6 +91,7 @@ class AppleIdTokenValidatorTest : FunSpec({
         shouldThrow<OAuthException> {
             fixture.validator.validate(token)
         }.message shouldBe "No Apple public key found for token key id"
+        fixture.server.verify()
     }
 })
 
